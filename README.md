@@ -1,46 +1,205 @@
-# Getting Started with Create React App
+ManagerTalk — Difficult Conversation Coach
+A Shipaton 2026 Submission by Adetunji Odedina
+ManagerTalk is an AI‑powered coaching tool that helps managers practise difficult workplace conversations through a structured, scenario‑driven simulation. It guides users through a 7‑step conversation flow, validates behavioural accuracy at each stage, and provides scoring + feedback based on clarity, empathy, and directness.
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+This submission includes the full working app, scenario logic, validation engine, scoring engine, and UI flow required for Shipaton 2026.
 
-## Available Scripts
+🚀 What ManagerTalk Does
+ManagerTalk simulates a realistic workplace conversation between a manager and an employee.
+The app evaluates the manager’s responses across seven stages:
 
-In the project directory, you can run:
+Opening the Conversation
 
-### `npm start`
+Performance SBI (Situation–Behaviour–Impact)
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+Exploration
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+Commitments
 
-### `npm test`
+Closing the Conversation
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+Scoring
 
-### `npm run build`
+Feedback
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+Each stage includes:
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+Required behavioural rules
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+Real‑time validation
 
-### `npm run eject`
+Structured guidance
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+Branching logic
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+Commitment tracking
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+Follow‑up planning
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+Final scoring + coaching feedback
 
-## Learn More
+The result is a complete, end‑to‑end coaching experience.
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+🎯 Scenario Overview
+Scenario ID: MT‑S01
+Title: The Passed‑Over Performer  
+Difficulty: Intermediate
+Primary Competency: Managing disengagement after a perceived career injustice
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+Summary:  
+Priya, a senior analyst, expected to be promoted to team lead. She wasn’t. Her motivation has dropped, deadlines slipped, and the manager must address both the emotional impact and the performance issue while retaining her engagement.
+
+This scenario was validated for realism using behavioural research and workplace patterns.
+
+🧠 Core Features
+✔ Behavioural Validation Engine
+Each stage checks for required behaviours such as:
+
+Acknowledging promotion disappointment
+
+Naming the performance issue clearly
+
+Exploring retention intent
+
+Setting concrete commitments with dates
+
+Avoiding reassurance or promotion promises
+
+Scheduling follow‑up
+
+Ensuring continuity and cross‑training
+
+✔ Branching Engine
+User messages are analysed for tone and intent, producing branches like:
+
+Guarded
+
+Factual challenge
+
+Partial openness
+
+Polite disengagement
+
+These branches influence exploration and commitment guidance.
+
+✔ Commitment Builder
+Both manager and employee commitments must be:
+
+Concrete
+
+Date‑anchored
+
+Operationally relevant
+
+Balanced
+
+✔ Closing Validator
+Ensures the final message includes:
+
+Follow‑up checkpoint
+
+Continuity planning
+
+No reassurance
+
+No promotion promises
+
+Clear operational next steps
+
+✔ Scoring Engine
+Evaluates the conversation on:
+
+Clarity
+
+Empathy
+
+Directness
+
+Produces a tier:
+
+GOOD
+
+MID
+
+POOR
+
+✔ Feedback Engine
+Provides:
+
+Strengths
+
+Areas for improvement
+
+Next steps
+
+Coaching tips
+
+🛠️ Tech Stack
+React 19
+
+TypeScript
+
+Zustand (state management)
+
+Custom validation + scoring engines
+
+Scenario JSON blueprint
+
+Multi‑screen guided UI
+
+📸 Screenshot Flow (Included in Submission)
+Main Page
+
+Opening
+
+Performance SBI
+
+Exploration
+
+Commitments
+
+Closing
+
+Scoring
+
+Feedback
+
+This demonstrates the full user journey.
+
+📂 Project Structure
+Code
+src/
+  engine/
+    stateMachine.ts
+    branchingEngine.ts
+    closingEngine.ts
+    commitmentsEngine.ts
+    scoringEngine.ts
+  screens/
+    OpeningScreen.tsx
+    PerformanceSBIScreen.tsx
+    ExplorationScreen.tsx
+    CommitmentsScreen.tsx
+    ClosingScreen.tsx
+    ScoringScreen.tsx
+    FeedbackScreen.tsx
+  store/
+    conversationState.ts
+    navigationState.ts
+  assets/
+  components/
+🔧 How to Run
+bash
+npm install
+npm start
+Runs the app in development mode.
+
+📜 License
+This project is submitted as part of RevenueCat Shipaton 2026.
+All scenario content and behavioural logic are original work.
+
+👤 Author
+Adetunji Odedina  
+Data Scientist & App Builder
+ManagerTalk — Shipaton 2026 Submission
+
