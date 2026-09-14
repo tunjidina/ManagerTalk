@@ -175,6 +175,7 @@ src/
     closingEngine.ts
     commitmentsEngine.ts
     scoringEngine.ts
+
   screens/
     OpeningScreen.tsx
     PerformanceSBIScreen.tsx
@@ -183,9 +184,11 @@ src/
     ClosingScreen.tsx
     ScoringScreen.tsx
     FeedbackScreen.tsx
+
   store/
     conversationState.ts
     navigationState.ts
+
   assets/
   components/
 🔧 How to Run
@@ -201,5 +204,4 @@ All scenario content and behavioural logic are original work.
 👤 Author
 Adetunji Odedina  
 Data Scientist & App Builder
-ManagerTalk — Shipaton 2026 Submission
-
+ManagerTalk — Shipaton 2026 Submissio
