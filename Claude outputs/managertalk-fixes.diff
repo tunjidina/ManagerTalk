@@ -1,0 +1,318 @@
+diff -ru --strip-trailing-cr -x '*.json' /mnt/user-data/uploads/managertalk/src/App.tsx mt/src/App.tsx
+--- /mnt/user-data/uploads/managertalk/src/App.tsx	2026-09-14 01:04:55.109431855 +0000
++++ mt/src/App.tsx	2026-09-14 01:07:08.672293112 +0000
+@@ -7,6 +7,7 @@
+ import ConversationFlowScreen from './screens/ConversationFlowScreen';
+ import CommitmentBuilderScreen from './screens/CommitmentBuilderScreen';
+ import ScoringScreen from './screens/ScoringScreen';
++import ClosingScreen from './screens/ClosingScreen';
+ import FeedbackScreen from './screens/FeedbackScreen';
+ 
+ const App: React.FC = () => {
+@@ -14,18 +15,23 @@
+ 
+   const renderScreen = () => {
+     switch (currentScreen) {
++      case 'overview':
+       case 'scenario_overview':
+         return <ScenarioOverviewScreen />;
+ 
+       case 'evidence':
+         return <EvidenceScreen />;
+ 
++      case 'conversation':
+       case 'conversation_flow':
+         return <ConversationFlowScreen />;
+ 
+       case 'commitment_builder':
+         return <CommitmentBuilderScreen />;
+ 
++      case 'closing':
++        return <ClosingScreen />;
++
+       case 'scoring':
+         return <ScoringScreen />;
+ 
+diff -ru --strip-trailing-cr -x '*.json' /mnt/user-data/uploads/managertalk/src/components/BranchPanel.tsx mt/src/components/BranchPanel.tsx
+--- /mnt/user-data/uploads/managertalk/src/components/BranchPanel.tsx	2026-09-14 01:04:56.385431823 +0000
++++ mt/src/components/BranchPanel.tsx	2026-09-14 01:07:08.673294637 +0000
+@@ -1,5 +1,4 @@
+ import React from 'react';
+-import { scenarioData } from '../utils/jsonLoader';
+ 
+ interface Props {
+   branch: string;
+diff -ru --strip-trailing-cr -x '*.json' /mnt/user-data/uploads/managertalk/src/engine/branchingEngine.ts mt/src/engine/branchingEngine.ts
+--- /mnt/user-data/uploads/managertalk/src/engine/branchingEngine.ts	2026-09-14 01:04:59.113431755 +0000
++++ mt/src/engine/branchingEngine.ts	2026-09-14 01:07:20.055252118 +0000
+@@ -22,9 +22,9 @@
+     'short answers',
+     'high formality',
+     'minimal context',
+-    'it’s fine',
++    "it's fine",
+     'okay',
+-    'i don’t know',
++    "i don't know",
+     'brief reply',
+   ],
+ 
+@@ -32,10 +32,10 @@
+     'precise dates',
+     'workload references',
+     'evidence-based counterpoints',
+-    'that’s not correct',
++    "that's not correct",
+     'actually',
+-    'the report wasn’t late',
+-    'the segmentation error wasn’t mine',
++    "the report wasn't late",
++    "the segmentation error wasn't mine",
+   ],
+ 
+   partial_openness: [
+@@ -44,7 +44,7 @@
+     'i felt',
+     'i was disappointed',
+     'the promotion',
+-    'i don’t feel valued',
++    "i don't feel valued",
+   ],
+ 
+   polite_disengagement: [
+@@ -62,7 +62,9 @@
+ // -----------------------------
+ 
+ export function detectBranch(userMessage: string): BranchDetectionResult {
+-  const msg = userMessage.toLowerCase();
++  const msg = userMessage
++    .toLowerCase()
++    .replace(/[\u2018\u2019]/g, "'");
+   const matched: { branch: ConversationBranch; signals: string[] }[] = [];
+ 
+   for (const branch of Object.keys(branchSignals) as ConversationBranch[]) {
+diff -ru --strip-trailing-cr -x '*.json' /mnt/user-data/uploads/managertalk/src/engine/closingEngine.ts mt/src/engine/closingEngine.ts
+--- /mnt/user-data/uploads/managertalk/src/engine/closingEngine.ts	2026-09-14 01:04:59.673431741 +0000
++++ mt/src/engine/closingEngine.ts	2026-09-14 01:07:20.055522436 +0000
+@@ -18,15 +18,26 @@
+ // Rule Detection Helpers
+ // -----------------------------
+ 
++// Normalises smart quotes and hyphen variants so typed input matches signal
++// strings regardless of how the browser or OS renders apostrophes.
++function normalize(text: string): string {
++  return text
++    .toLowerCase()
++    .replace(/[\u2018\u2019]/g, "'")
++    .replace(/[\u2013\u2014]/g, '-')
++    .replace(/follow\s+up/g, 'follow-up')
++    .replace(/check\s+in/g, 'check-in');
++}
++
+ function detectFalseReassurance(msg: string): boolean {
+   const reassuranceSignals = [
+-    'you’ll be fine',
++    "you'll be fine",
+     'everything is okay',
+-    'don’t worry',
++    "don't worry",
+     'it will all work out',
+-    'you’re doing great',
++    "you're doing great",
+   ];
+-  const lower = msg.toLowerCase();
++  const lower = normalize(msg);
+   return reassuranceSignals.some((s) => lower.includes(s));
+ }
+ 
+@@ -35,10 +46,10 @@
+     'next promotion',
+     'you will be promoted',
+     'i will get you promoted',
+-    'i promise you’ll move up',
++    "i promise you'll move up",
+     'your promotion is coming',
+   ];
+-  const lower = msg.toLowerCase();
++  const lower = normalize(msg);
+   return promiseSignals.some((s) => lower.includes(s));
+ }
+ 
+@@ -50,7 +61,7 @@
+     'review together',
+     'touch base',
+   ];
+-  const lower = msg.toLowerCase();
++  const lower = normalize(msg);
+   return followUpSignals.some((s) => lower.includes(s));
+ }
+ 
+@@ -62,7 +73,7 @@
+     'reduce dependency',
+     'knowledge transfer',
+   ];
+-  const lower = msg.toLowerCase();
++  const lower = normalize(msg);
+   return continuitySignals.some((s) => lower.includes(s));
+ }
+ 
+@@ -113,12 +124,15 @@
+ // Wrapper for ClosingScreen.tsx
+ // -----------------------------
+ 
+-export function closingValidation(message: string) {
+-  // This wrapper allows ClosingScreen to call a simple function
++export function closingValidation(
++  message: string,
++  managerCommitmentComplete: boolean,
++  employeeCommitmentComplete: boolean
++) {
+   const result = evaluateClosing({
+     managerMessage: message,
+-    managerCommitmentComplete: true,   // ClosingScreen checks these separately
+-    employeeCommitmentComplete: true,
++    managerCommitmentComplete,
++    employeeCommitmentComplete,
+   });
+ 
+   return {
+diff -ru --strip-trailing-cr -x '*.json' /mnt/user-data/uploads/managertalk/src/index.tsx mt/src/index.tsx
+--- /mnt/user-data/uploads/managertalk/src/index.tsx	2026-09-14 01:04:56.193431828 +0000
++++ mt/src/index.tsx	2026-09-14 01:05:34.650527254 +0000
+@@ -2,7 +2,7 @@
+ import ReactDOM from 'react-dom/client';
+ import './index.css';
+ import App from './App';
+-import reportWebVitals from './reportWebVitals';
++
+ 
+ const root = ReactDOM.createRoot(
+   document.getElementById('root') as HTMLElement
+@@ -16,4 +16,4 @@
+ // If you want to start measuring performance in your app, pass a function
+ // to log results (for example: reportWebVitals(console.log))
+ // or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals
+-reportWebVitals();
++
+diff -ru --strip-trailing-cr -x '*.json' /mnt/user-data/uploads/managertalk/src/screens/ClosingScreen.tsx mt/src/screens/ClosingScreen.tsx
+--- /mnt/user-data/uploads/managertalk/src/screens/ClosingScreen.tsx	2026-09-14 01:05:00.813431713 +0000
++++ mt/src/screens/ClosingScreen.tsx	2026-09-14 01:07:08.673065014 +0000
+@@ -3,24 +3,32 @@
+ import { useConversationState } from '../store/conversationState';
+ 
+ import { closingValidation } from '../engine/closingEngine';
++import { validateCommitments } from '../engine/commitmentEngine';
+ import { scenarioData } from '../utils/jsonLoader';
+ 
+ const ClosingScreen: React.FC = () => {
+   const { setCurrentScreen } = useNavigationState();
+-  const { lastManagerMessage } = useConversationState();
++  const { managerCommitment, employeeCommitment, setLastManagerMessage } =
++    useConversationState();
+ 
+   const [closingMessage, setClosingMessage] = useState('');
+   const [error, setError] = useState<string | null>(null);
+ 
+   const handleSubmit = () => {
+-    const result = closingValidation(closingMessage);
++    const commitments = validateCommitments(managerCommitment, employeeCommitment);
++
++    const result = closingValidation(
++      closingMessage,
++      commitments.manager.isComplete,
++      commitments.employee.isComplete
++    );
+ 
+     if (!result.valid) {
+       setError(result.reason || 'Closing message needs adjustment.');
+       return;
+     }
+ 
+-    // Move to scoring screen
++    setLastManagerMessage(closingMessage);
+     setCurrentScreen('scoring');
+   };
+ 
+diff -ru --strip-trailing-cr -x '*.json' /mnt/user-data/uploads/managertalk/src/screens/CommitmentBuilderScreen.tsx mt/src/screens/CommitmentBuilderScreen.tsx
+--- /mnt/user-data/uploads/managertalk/src/screens/CommitmentBuilderScreen.tsx	2026-09-14 01:05:01.317431700 +0000
++++ mt/src/screens/CommitmentBuilderScreen.tsx	2026-09-14 01:07:08.672619989 +0000
+@@ -56,12 +56,20 @@
+       }
+     );
+ 
+-    // Engine returns { ok, error }
+-    if (!validation.valid) {
+-      setError(validation.error || 'Please complete all fields.');
++    if (!validation.allComplete) {
++      const problems: string[] = [];
++      if (!validation.manager.isComplete) {
++        problems.push(`Manager commitment missing: ${validation.manager.missingFields.join(', ')}`);
++      }
++      if (!validation.employee.isComplete) {
++        problems.push(`Employee commitment missing: ${validation.employee.missingFields.join(', ')}`);
++      }
++      setError(problems.join(' | '));
+       return;
+     }
+ 
++    setError(null);
++
+     // Save commitments
+     setManagerCommitment({
+       action: managerAction,
+diff -ru --strip-trailing-cr -x '*.json' /mnt/user-data/uploads/managertalk/src/screens/ConversationFlowScreen.tsx mt/src/screens/ConversationFlowScreen.tsx
+--- /mnt/user-data/uploads/managertalk/src/screens/ConversationFlowScreen.tsx	2026-09-14 01:05:01.741431690 +0000
++++ mt/src/screens/ConversationFlowScreen.tsx	2026-09-14 01:07:08.673190344 +0000
+@@ -41,6 +41,9 @@
+     // Clear failure if previously set
+     setFailure(false, null);
+ 
++    // Clear the input once the message has been accepted
++    setManagerMessage('');
++
+     // Update stage + branch
+     setStage(result.nextStage);
+     if (result.branch) {
+@@ -53,9 +56,9 @@
+       return;
+     }
+ 
+-    // If we reached closing → go to ScoringScreen
++    // If we reached closing → go to ClosingScreen
+     if (result.nextStage === 'closing') {
+-      setCurrentScreen('scoring');
++      setCurrentScreen('closing');
+       return;
+     }
+ 
+diff -ru --strip-trailing-cr -x '*.json' /mnt/user-data/uploads/managertalk/src/screens/ScenarioOverviewScreen.tsx mt/src/screens/ScenarioOverviewScreen.tsx
+--- /mnt/user-data/uploads/managertalk/src/screens/ScenarioOverviewScreen.tsx	2026-09-14 01:05:03.145431655 +0000
++++ mt/src/screens/ScenarioOverviewScreen.tsx	2026-09-14 01:07:08.672499880 +0000
+@@ -7,10 +7,12 @@
+   const { setCurrentScreen } = useNavigationState();
+ 
+   const metadata = {
+-    scenario_id: scenarioData.scenaria_id,
++    scenario_id: scenarioData.scenario_id,
+     title: scenarioData.title,
+     difficulty: scenarioData.difficulty,
+-    primary_competency: scenarioData.primary_competency
++    competency: scenarioData.primary_competency,
++    emotional_tone: scenarioData.emotional_tone,
++    stakes: scenarioData.stakes
+   };
+ 
+   const managerProfile = scenarioData.manager_profile;
+@@ -46,9 +48,9 @@
+       <div style={styles.section}>
+         <h2 style={styles.sectionTitle}>Stakes</h2>
+         <ul>
+-          <li><strong>Manager:</strong> {metadata.stakes.manager}</li>
+-          <li><strong>Employee:</strong> {metadata.stakes.employee}</li>
+-          <li><strong>Organization:</strong> {metadata.stakes.organization}</li>
++          <li><strong>Manager:</strong> {metadata.stakes.manager.join(' ')}</li>
++          <li><strong>Employee:</strong> {metadata.stakes.employee.join(' ')}</li>
++          <li><strong>Organization:</strong> {metadata.stakes.organization.join(' ')}</li>
+         </ul>
+       </div>
+ 
