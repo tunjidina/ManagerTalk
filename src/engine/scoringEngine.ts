@@ -1,5 +1,5 @@
 import { ConversationStage, ConversationBranch, ScoreResult } from '../store/conversationState';
- 
+
 export interface ScoringInput {
   clarity: number;
   empathy: number;
@@ -8,23 +8,16 @@ export interface ScoringInput {
   branch: ConversationBranch | null;
   message: string;
 }
- 
-export interface ScoringResult {
-  tier: 'good' | 'mid' | 'poor';
-  clarity: number;
-  empathy: number;
-  directness: number;
-}
- 
+
 export function scoreMessage(input: ScoringInput): ScoreResult {
   const { clarity, empathy, directness } = input;
- 
+
   const avg = (clarity + empathy + directness) / 3;
- 
+
   let tier: 'good' | 'mid' | 'poor' = 'mid';
   if (avg >= 4) tier = 'good';
   if (avg <= 2) tier = 'poor';
- 
+
   return {
     tier,
     clarity,
@@ -32,5 +25,3 @@ export function scoreMessage(input: ScoringInput): ScoreResult {
     directness
   };
 }
-
-

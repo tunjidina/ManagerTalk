@@ -1,15 +1,25 @@
 import React, { useState } from 'react';
 import { useNavigationState } from '../store/navigationState';
+import { useConversationState } from '../store/conversationState';
 import { closingValidation } from '../engine/closingEngine';
+import { validateCommitments } from '../engine/commitmentEngine';
 import { scenarioData } from '../utils/jsonLoader';
 
 const ClosingScreen: React.FC = () => {
   const { setCurrentScreen } = useNavigationState();
+  const { managerCommitment, employeeCommitment } = useConversationState();
   const [message, setMessage] = useState('');
   const [error, setError] = useState<string | null>(null);
 
+  // commitmentEngine is the single source of truth for "complete".
+  const commitments = validateCommitments(managerCommitment, employeeCommitment);
+
   const handleClose = () => {
-    const result = closingValidation(message);
+    const result = closingValidation(
+      message,
+      commitments.manager.isComplete,
+      commitments.employee.isComplete
+    );
     if (!result.valid) {
       setError(result.reason);
       return;

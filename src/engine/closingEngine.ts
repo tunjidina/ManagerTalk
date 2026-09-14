@@ -18,6 +18,14 @@ export interface ClosingResult {
 // Rule Detection Helpers
 // -----------------------------
 
+// Maps Unicode dash variants onto the plain ASCII hyphen so that typed or
+// pasted input matches the hyphenated signal strings. Covers the hyphen
+// (U+2010), non-breaking hyphen (U+2011), figure dash (U+2012), en dash
+// (U+2013) and em dash (U+2014).
+function normalizeHyphens(text: string): string {
+  return text.replace(/[‐‑‒–—]/g, '-');
+}
+
 function detectFalseReassurance(msg: string): boolean {
   const reassuranceSignals = [
     "you'll be fine",
@@ -51,7 +59,7 @@ function detectFollowUp(msg: string): boolean {
     'review together',
     'touch base',
   ];
-  const lower = msg.toLowerCase();
+  const lower = normalizeHyphens(msg.toLowerCase());
   return followUpSignals.some((s) => lower.includes(s));
 }
 
@@ -114,12 +122,18 @@ export function evaluateClosing(input: ClosingInput): ClosingResult {
 // Wrapper for ClosingScreen.tsx
 // -----------------------------
 
-export function closingValidation(message: string) {
-  // This wrapper allows ClosingScreen to call a simple function
+export function closingValidation(
+  message: string,
+  managerCommitmentComplete: boolean,
+  employeeCommitmentComplete: boolean
+) {
+  // This wrapper allows ClosingScreen to call a simple function.
+  // Commitment completeness is supplied by the caller, which reads the
+  // commitments from the store and checks them with validateCommitments.
   const result = evaluateClosing({
     managerMessage: message,
-    managerCommitmentComplete: true,   // ClosingScreen checks these separately
-    employeeCommitmentComplete: true,
+    managerCommitmentComplete,
+    employeeCommitmentComplete,
   });
 
   return {
