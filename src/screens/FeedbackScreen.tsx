@@ -87,9 +87,19 @@ const FeedbackScreen: React.FC = () => {
         <p style={styles.ctaHint}>
           Run the scenario again to practise the behaviours you missed.
         </p>
-        <button style={styles.cta} onClick={() => setCurrentScreen('scenario_overview')}>
-          Restart Scenario
-        </button>
+
+        <div style={styles.ctaButtons}>
+          <button
+            style={styles.secondaryCta}
+            onClick={() => setCurrentScreen('certificate')}
+          >
+            View Certificate
+          </button>
+
+          <button style={styles.cta} onClick={() => setCurrentScreen('scenario_overview')}>
+            Restart Scenario
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -224,6 +234,23 @@ const styles: Record<string, React.CSSProperties> = {
     color: '#6b7280',
     margin: 0,
     maxWidth: '46ch'
+  },
+  ctaButtons: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    gap: '12px',
+    alignItems: 'center'
+  },
+  secondaryCta: {
+    padding: '16px 28px',
+    fontSize: '16px',
+    fontWeight: 600,
+    fontFamily: 'Inter, sans-serif',
+    backgroundColor: '#fff',
+    color: '#374151',
+    border: '1px solid #d4d4d4',
+    borderRadius: '8px',
+    cursor: 'pointer'
   },
   cta: {
     padding: '16px 28px',

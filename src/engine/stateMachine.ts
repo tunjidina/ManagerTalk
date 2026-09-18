@@ -1,4 +1,10 @@
 // -----------------------------
+// Imports
+// -----------------------------
+
+import { detectBranch } from './branchingEngine';
+
+// -----------------------------
 // Types (aligned with your existing engine files)
 // -----------------------------
 
@@ -27,12 +33,6 @@ export interface StateMachineOutput {
   failure: boolean;
   failureReason?: string;
 }
-
-// -----------------------------
-// Imports
-// -----------------------------
-
-import { detectBranch } from './branchingEngine';
 
 // -----------------------------
 // Failure Conditions (from Scenario Validation Summary)
@@ -138,3 +138,4 @@ export function runStateMachine(input: StateMachineInput): StateMachineOutput {
       };
   }
 }
+

@@ -1,13 +1,19 @@
 import React, { useState } from 'react';
 import { useNavigationState } from '../store/navigationState';
 import { useConversationState } from '../store/conversationState';
+import { useAuthState } from '../store/authState';
 import { closingValidation } from '../engine/closingEngine';
 import { validateCommitments } from '../engine/commitmentEngine';
+import { logAnalyticsEvent } from '../engine/analytics';
+import { useActiveScenarioState } from '../store/activeScenarioState';
 import { scenarioData } from '../utils/jsonLoader';
 
 const ClosingScreen: React.FC = () => {
   const { setCurrentScreen } = useNavigationState();
   const { managerCommitment, employeeCommitment } = useConversationState();
+  const user = useAuthState((state) => state.user);
+  const uid = user ? user.uid : null;
+  const scenarioId = useActiveScenarioState((state) => state.scenarioId);
   const [message, setMessage] = useState('');
   const [error, setError] = useState<string | null>(null);
 
@@ -22,6 +28,13 @@ const ClosingScreen: React.FC = () => {
     );
     if (!result.valid) {
       setError(result.reason);
+
+      // The validator rejected this closing attempt. Fire-and-forget —
+      // the rejection reason is deliberately not sent as metadata: it can
+      // quote the manager's own text, which does not belong in analytics.
+      if (uid) {
+        void logAnalyticsEvent(uid, scenarioId, 'closing_rejected', 'closing');
+      }
       return;
     }
     setError(null);

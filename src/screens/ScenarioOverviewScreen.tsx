@@ -1,10 +1,35 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useNavigationState } from '../store/navigationState';
+import { useAuthState } from '../store/authState';
+import { logAnalyticsEvent } from '../engine/analytics';
+import { useActiveScenarioState } from '../store/activeScenarioState';
 import { scenarioData } from '../utils/jsonLoader';
 import ProfileCard from '../components/ProfileCard';
 
 const ScenarioOverviewScreen: React.FC = () => {
   const { setCurrentScreen } = useNavigationState();
+  const user = useAuthState((state) => state.user);
+  const uid = user ? user.uid : null;
+
+  // The scenario id comes from the selector, not a constant.
+  const scenarioId = useActiveScenarioState((state) => state.scenarioId);
+
+  // Guards the React 19 StrictMode double-invoke in development. Refs
+  // survive StrictMode's simulated unmount/remount of the same instance,
+  // so one mount produces exactly one event.
+  const startedRef = useRef(false);
+
+  useEffect(() => {
+    if (!uid || startedRef.current) {
+      return;
+    }
+
+    startedRef.current = true;
+
+    // Fire-and-forget: logAnalyticsEvent never throws, and nothing on this
+    // screen should wait on a network call to render.
+    void logAnalyticsEvent(uid, scenarioId, 'scenario_started', 'overview');
+  }, [uid, scenarioId]);
 
   const metadata = {
     scenario_id: scenarioData.scenario_id,

@@ -1,7 +1,10 @@
 import React, { useState } from 'react';
 import { useNavigationState } from '../store/navigationState';
 import { useConversationState } from '../store/conversationState';
+import { useAuthState } from '../store/authState';
 import { validateCommitments } from '../engine/commitmentEngine';
+import { logAnalyticsEvent } from '../engine/analytics';
+import { useActiveScenarioState } from '../store/activeScenarioState';
 
 const CommitmentBuilderScreen: React.FC = () => {
   const { setCurrentScreen } = useNavigationState();
@@ -12,6 +15,10 @@ const CommitmentBuilderScreen: React.FC = () => {
     setEmployeeCommitment
   } = useConversationState();
 
+  const user = useAuthState((state) => state.user);
+  const uid = user ? user.uid : null;
+  const scenarioId = useActiveScenarioState((state) => state.scenarioId);
+
   const [error, setError] = useState<string | null>(null);
 
   const handleNext = () => {
@@ -21,6 +28,14 @@ const CommitmentBuilderScreen: React.FC = () => {
       return;
     }
     setError(null);
+
+    // Fired here, not in the input onChange handlers. Those run on every
+    // keystroke — one Firestore write per character typed. This is the
+    // point at which both commitments are actually committed.
+    if (uid) {
+      void logAnalyticsEvent(uid, scenarioId, 'commitment_added', 'commitments');
+    }
+
     setCurrentScreen('closing');
   };
 
