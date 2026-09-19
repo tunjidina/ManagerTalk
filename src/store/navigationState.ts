@@ -21,6 +21,9 @@ export type Screen =
   // Scenario selection.
   | 'scenario_select'
 
+  // Account settings.
+  | 'screen_profile'
+
   // MT-S02 runs its own stage set. Its JSON shape is incompatible with
   // MT-S01's, so it has its own screens rather than reusing the seven above.
   | 's02_sbi'

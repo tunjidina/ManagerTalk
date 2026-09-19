@@ -84,7 +84,17 @@ const SCREENS: Screen[] = [
   'commitment_builder',
   'closing',
   'scoring',
-  'feedback'
+  'feedback',
+  'certificate',
+  'scenario_select',
+  'screen_profile',
+  's02_sbi',
+  's02_exploration',
+  's02_hypotheses',
+  's02_commitments',
+  's02_closing',
+  's02_scoring',
+  's02_feedback'
 ];
 
 // -----------------------------

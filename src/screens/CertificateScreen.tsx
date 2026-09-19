@@ -30,20 +30,28 @@ function formatCertificateDate(date: Date): string {
 }
 
 /**
- * Firebase Auth users created with email/password have no displayName, so
- * this falls back to the local part of the email before giving up. A
- * certificate with a blank name on it is worse than one that says
- * "tunji" — but neither should be a crash.
+ * Whose name goes on the certificate, in priority order:
+ *
+ *   1. Firebase displayName — set by the identity provider, so it is the
+ *      most authoritative thing the app knows.
+ *   2. certificateName — what the user typed on the profile screen.
+ *      Email/password accounts have no displayName at all, which is why
+ *      that screen exists.
+ *   3. A neutral product fallback.
+ *
+ * The email local part is deliberately NOT a source any more. It printed
+ * a mangled handle on a document people share, and it put an
+ * email-derived string on the one screen most likely to be screenshotted.
  */
 function resolveDisplayName(
   displayName: string | null | undefined,
-  email: string | null | undefined
+  certificateName: string | null | undefined
 ): string {
   if (displayName && displayName.trim()) {
     return displayName.trim();
   }
-  if (email && email.indexOf('@') > 0) {
-    return email.slice(0, email.indexOf('@'));
+  if (certificateName && certificateName.trim()) {
+    return certificateName.trim();
   }
   return 'ManagerTalk Participant';
 }
@@ -88,6 +96,7 @@ const CertificateScreen: React.FC = () => {
   const { setCurrentScreen } = useNavigationState();
   const user = useAuthState((state) => state.user);
   const uid = user ? user.uid : null;
+  const certificateName = useAuthState((state) => state.certificateName);
 
   // Which scenario this certificate is for. Reading a constant here would
   // have printed MT-S01 on a certificate earned in MT-S02.
@@ -167,7 +176,7 @@ const CertificateScreen: React.FC = () => {
 
   const recipientName = resolveDisplayName(
     user ? user.displayName : null,
-    user ? user.email : null
+    certificateName
   );
 
   const certificateId = hasCompletion

@@ -47,6 +47,15 @@ const ScenarioSelectScreen: React.FC = () => {
 
       <div style={styles.divider} />
 
+      <div style={styles.actionRow}>
+        <button
+          style={styles.secondary}
+          onClick={() => setCurrentScreen('screen_profile')}
+        >
+          Profile
+        </button>
+      </div>
+
       <div style={styles.grid}>
         {SCENARIO_REGISTRY.map((entry) => (
           <button
@@ -102,6 +111,23 @@ const styles: Record<string, React.CSSProperties> = {
     height: '1px',
     backgroundColor: '#e6e6e6',
     margin: '0 0 36px 0'
+  },
+  actionRow: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    gap: '12px',
+    marginBottom: '24px'
+  },
+  secondary: {
+    padding: '12px 22px',
+    fontSize: '15px',
+    fontWeight: 600,
+    fontFamily: 'Inter, sans-serif',
+    backgroundColor: '#fff',
+    color: '#374151',
+    border: '1px solid #d4d4d4',
+    borderRadius: '8px',
+    cursor: 'pointer'
   },
   grid: {
     display: 'flex',

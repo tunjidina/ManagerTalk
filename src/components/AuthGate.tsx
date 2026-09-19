@@ -23,7 +23,8 @@ interface Props {
  * App.tsx is never reached while signed out.
  */
 const AuthGate: React.FC<Props> = ({ children }) => {
-  const { status, setAuthenticated, setSignedOut } = useAuthState();
+  const { status, setAuthenticated, setSignedOut, setCertificateName } =
+    useAuthState();
 
   const configured = isFirebaseConfigured();
 
@@ -36,24 +37,34 @@ const AuthGate: React.FC<Props> = ({ children }) => {
     // Fires once on load with the restored session (or null), then on every
     // sign-in and sign-out. Returns its own unsubscribe function.
     return onAuthStateChanged(getFirebaseAuth(), (firebaseUser) => {
-      if (firebaseUser) {
-        const authUser = {
-          uid: firebaseUser.uid,
-          email: firebaseUser.email,
-          displayName: firebaseUser.displayName
-        };
-
-        setAuthenticated(authUser);
-
-        // Not awaited: the profile document is bookkeeping, and a slow or
-        // failed write must not delay the app rendering for a user who is
-        // already authenticated.
-        void ensureUserProfile(authUser);
-      } else {
+      if (!firebaseUser) {
         setSignedOut();
+        return;
       }
+
+      const authUser = {
+        uid: firebaseUser.uid,
+        email: firebaseUser.email,
+        displayName: firebaseUser.displayName
+      };
+
+      // ensureUserProfile now returns the stored profile as well as
+      // creating it, so hydration rides on the call that was already
+      // being made — no second round trip, no new async layer.
+      //
+      // The store is filled and only THEN is status flipped to
+      // 'signed_in', so the app never renders a frame with an empty
+      // certificateName. Status stays 'loading' until this resolves,
+      // which is the branch AuthGate already had.
+      //
+      // ensureUserProfile never throws: on any failure it returns null
+      // and sign-in proceeds with whatever Firebase Auth supplied.
+      ensureUserProfile(authUser).then((profile) => {
+        setCertificateName(profile ? profile.certificateName : null);
+        setAuthenticated(authUser);
+      });
     });
-  }, [configured, setAuthenticated, setSignedOut]);
+  }, [configured, setAuthenticated, setSignedOut, setCertificateName]);
 
   // A readable setup screen instead of a blank page.
   if (!configured) {

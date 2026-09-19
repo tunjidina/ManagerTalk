@@ -126,6 +126,7 @@ const SCREEN_TO_STEP: Record<Screen, ScenarioStep> = {
   // stays exhaustive. MT-S02 progress is NOT tracked by this mapping — its
   // stage lives in s02SessionState and is not yet persisted to Firestore.
   scenario_select: 'overview',
+  screen_profile: 'overview',
   s02_sbi: 'conversation',
   s02_exploration: 'conversation',
   s02_hypotheses: 'conversation',
