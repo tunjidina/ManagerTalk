@@ -214,6 +214,7 @@ The certificate name is dynamically populated using the user's profile informati
 ---
 
 #  AI-Assisted Development
+
 ManagerTalk was developed through an AI-assisted workflow that supported rapid iteration and refinement across 
 both the product and development process, while all final architectural, engineering, and product 
 decisions remained developer-controlled.
