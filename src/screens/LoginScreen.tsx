@@ -5,10 +5,30 @@ import {
   signInWithPopup,
   GoogleAuthProvider
 } from 'firebase/auth';
+import { Capacitor } from '@capacitor/core';
 
 import { getFirebaseAuth } from '../lib/firebase';
 
 type Mode = 'sign_in' | 'sign_up';
+
+/**
+ * True in a browser, false inside the Capacitor Android/iOS WebView.
+ *
+ * Google sign-in here goes through signInWithPopup, which opens a second
+ * browser window and posts the credential back to the opener. A Capacitor
+ * WebView has no opener to post back to, so the popup either fails to open
+ * or hangs on a blank page — the button would be present and permanently
+ * broken. Hiding it is the honest state of the app on native until the
+ * native plugin path (@capacitor-firebase/authentication) is wired in.
+ *
+ * Computed once at module scope rather than per render: the platform
+ * cannot change during a session, and this keeps it out of the component's
+ * render path.
+ *
+ * Capacitor.isNativePlatform() returns false in any normal browser, so the
+ * web build — dev server and deployed — is unaffected.
+ */
+const SHOW_GOOGLE_SIGN_IN = !Capacitor.isNativePlatform();
 
 /**
  * Maps Firebase error codes onto sentences a person can act on.
@@ -72,8 +92,10 @@ const LoginScreen: React.FC = () => {
     }
   };
 
-  // Web path. On Capacitor Android, swap this one call for
-  // FirebaseAuthentication.signInWithGoogle() — see the setup notes.
+  // Web only — unreachable on native, where the button that calls it is
+  // not rendered. Left exactly as it was: when the native plugin path is
+  // added later, this becomes the browser branch of a platform check
+  // rather than something to rewrite.
   const handleGoogle = async () => {
     setError(null);
     setBusy(true);
@@ -112,20 +134,29 @@ const LoginScreen: React.FC = () => {
           Difficult conversation coaching, one scenario at a time.
         </p>
 
-        <button
-          type="button"
-          style={busy ? { ...styles.googleButton, ...styles.disabled } : styles.googleButton}
-          onClick={handleGoogle}
-          disabled={busy}
-        >
-          Continue with Google
-        </button>
+        {/*
+          Button and divider hide together. The divider only exists to
+          separate two sign-in methods; on native there is one, and a lone
+          "or use your email" rule above the form reads as a bug.
+        */}
+        {SHOW_GOOGLE_SIGN_IN && (
+          <>
+            <button
+              type="button"
+              style={busy ? { ...styles.googleButton, ...styles.disabled } : styles.googleButton}
+              onClick={handleGoogle}
+              disabled={busy}
+            >
+              Continue with Google
+            </button>
 
-        <div style={styles.divider}>
-          <span style={styles.dividerLine} aria-hidden="true" />
-          <span style={styles.dividerText}>or use your email</span>
-          <span style={styles.dividerLine} aria-hidden="true" />
-        </div>
+            <div style={styles.divider}>
+              <span style={styles.dividerLine} aria-hidden="true" />
+              <span style={styles.dividerText}>or use your email</span>
+              <span style={styles.dividerLine} aria-hidden="true" />
+            </div>
+          </>
+        )}
 
         {error && (
           <div style={styles.errorBox} role="alert">
