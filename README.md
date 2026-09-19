@@ -220,7 +220,7 @@ both the product and development process, while all final architectural, enginee
 decisions remained developer-controlled.
 ---
 
-# 🚀 Getting Started
+#   Getting Started
 
 ## Prerequisites
 
@@ -295,7 +295,7 @@ npm run build
 
 ---
 
-# 🔥 Firebase Setup
+#   Firebase Setup
 
 ManagerTalk uses Firebase for authentication and profile persistence.
 
@@ -321,7 +321,7 @@ The Firebase configuration is supplied through environment variables.
 
 ---
 
-# 📁 Project Structure
+#   Project Structure
 
 ```text
 src/
@@ -345,7 +345,7 @@ src/
 
 ---
 
-# 🔄 Application Flow
+#   Application Flow
 
 At a high level, the application follows this flow:
 
@@ -382,7 +382,7 @@ Certificate
 
 ---
 
-# 🧩 Design Principles
+#   Design Principles
 
 ManagerTalk was designed around several principles:
 
@@ -408,7 +408,7 @@ Authentication, profile persistence, scenario state, navigation, and certificate
 
 ---
 
-# 🏆 Shipaton 2026
+#   Shipaton 2026
 
 ManagerTalk was built for **Shipaton 2026**.
 
@@ -428,7 +428,7 @@ The project demonstrates:
 
 ---
 
-# 🛠️ Development Commands
+#   Development Commands
 
 | Command            | Description                  |
 | ------------------ | ---------------------------- |
@@ -439,7 +439,7 @@ The project demonstrates:
 
 ---
 
-# 📌 Future Improvements
+#   Future Improvements
 
 Potential areas for future development include:
 
@@ -454,7 +454,7 @@ Potential areas for future development include:
 
 ---
 
-# 👤 Author
+#   Author
 
 **Adetunji Odedina**
 
