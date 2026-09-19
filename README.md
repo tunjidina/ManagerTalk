@@ -6,7 +6,7 @@ ManagerTalk provides a realistic, guided environment for developing **clarity, e
 
 ---
 
-## 📸 Overview
+##   Overview
 
 ManagerTalk allows managers to practice difficult conversations in a safe, repeatable environment before having them in real life.
 
@@ -32,24 +32,24 @@ Scoring & Feedback
 
 ---
 
-## ✨ Features
+##   Features
 
-* 🎭 Scenario-based difficult conversation simulations
-* 🧭 Structured 7-step conversation framework
-* 🔀 Branching conversation logic
-* 🧠 Behaviour-focused coaching scenarios
-* 💾 Automatic scenario progress saving
-* 🔄 Scenario progress restoration
-* 🔐 Firebase Authentication
-* ☁️ Firestore-backed profile persistence
-* 👤 Custom certificate name
-* 📄 Dynamic completion certificates
-* 📊 Scoring and feedback
-* 📱 Responsive application experience
+*  Scenario-based difficult conversation simulations
+*  Structured 7-step conversation framework
+*  Branching conversation logic
+*  Behaviour-focused coaching scenarios
+*  Automatic scenario progress saving
+*  Scenario progress restoration
+*  Firebase Authentication
+*  Firestore-backed profile persistence
+*  Custom certificate name
+*  Dynamic completion certificates
+*  Scoring and feedback
+*  Responsive application experience
 
 ---
 
-## 🎭 Included Scenarios
+##   Included Scenarios
 
 ### MT-S01 — The Passed-Over Performer
 
@@ -78,7 +78,7 @@ The scenario demonstrates how structured state management can be used to model c
 
 ---
 
-# 🧭 The 7-Step Conversation Model
+#   The 7-Step Conversation Model
 
 ManagerTalk uses a structured seven-stage conversation framework.
 
@@ -112,7 +112,7 @@ Provides feedback on the conversation and highlights areas for improvement.
 
 ---
 
-# 🏗️ Architecture
+#   Architecture
 
 ## Tech Stack
 
@@ -169,7 +169,7 @@ The certificate name is loaded before the application renders the relevant user 
 
 ---
 
-# 👤 Profile & Certificate Name
+#   Profile & Certificate Name
 
 Users can configure the name they want to appear on their completion certificate.
 
@@ -197,7 +197,7 @@ ManagerTalk Participant
 
 ---
 
-# 📄 Certificate of Completion
+#   Certificate of Completion
 
 After successfully completing a scenario, the user receives a certificate of completion.
 
@@ -213,35 +213,10 @@ The certificate name is dynamically populated using the user's profile informati
 
 ---
 
-# 🤖 AI-Assisted Development Workflow
-
-ManagerTalk was developed using a modern, AI-assisted development workflow.
-
-Multiple AI tools were used collaboratively to support:
-
-* Scenario design
-* Behavioural validation
-* Structured content generation
-* Iterative development
-* Content refinement
-* Development velocity
-
-AI was used as part of the development workflow rather than as a replacement for engineering decisions.
-
-All final decisions relating to:
-
-* Application architecture
-* State management
-* Firebase integration
-* Data persistence
-* User experience
-* Scenario implementation
-* Application behaviour
-
-were developer-controlled.
-
-The workflow helped accelerate iteration while maintaining manual control over the final implementation.
-
+#  AI-Assisted Development
+ManagerTalk was developed through an AI-assisted workflow that supported rapid iteration and refinement across 
+both the product and development process, while all final architectural, engineering, and product 
+decisions remained developer-controlled.
 ---
 
 # 🚀 Getting Started
