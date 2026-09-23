@@ -7,7 +7,9 @@ import {
   missingFirebaseKeys
 } from '../lib/firebase';
 import { ensureUserProfile } from '../lib/userProfile';
+import { configurePurchases } from '../lib/purchases';
 import { useAuthState } from '../store/authState';
+import { useEntitlementState } from '../store/entitlementState';
 import LoginScreen from '../screens/LoginScreen';
 import LoadingFallback from './LoadingFallback';
 
@@ -38,6 +40,10 @@ const AuthGate: React.FC<Props> = ({ children }) => {
     // sign-in and sign-out. Returns its own unsubscribe function.
     return onAuthStateChanged(getFirebaseAuth(), (firebaseUser) => {
       if (!firebaseUser) {
+        // The entitlement belongs to the person who bought it. Clearing
+        // it with the session stops the next person signing in on this
+        // device from inheriting premium for a frame.
+        useEntitlementState.getState().setHasPremium(false);
         setSignedOut();
         return;
       }
@@ -59,6 +65,19 @@ const AuthGate: React.FC<Props> = ({ children }) => {
       //
       // ensureUserProfile never throws: on any failure it returns null
       // and sign-in proceeds with whatever Firebase Auth supplied.
+      // RevenueCat Web Billing has no anonymous mode: the SDK is
+      // configured with the Firebase uid, which is what makes an
+      // entitlement follow the account rather than the install. This
+      // has to happen before any screen can render a paywall, so it
+      // rides on the same callback as the profile hydration.
+      //
+      // configurePurchases never throws and never blocks: entitlements
+      // are read after sign-in completes, so a slow or failed
+      // RevenueCat call cannot hold up the app.
+      configurePurchases(firebaseUser.uid).then(() => {
+        useEntitlementState.getState().checkEntitlements();
+      });
+
       ensureUserProfile(authUser).then((profile) => {
         setCertificateName(profile ? profile.certificateName : null);
         setAuthenticated(authUser);

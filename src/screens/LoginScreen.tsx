@@ -3,6 +3,7 @@ import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   signInWithPopup,
+  sendPasswordResetEmail,
   GoogleAuthProvider
 } from 'firebase/auth';
 import { Capacitor } from '@capacitor/core';
@@ -69,11 +70,17 @@ const LoginScreen: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
+  // Separate from `error` so a reset confirmation doesn't render in the
+  // red error box, and so sending a reset doesn't clear a sign-in error
+  // the user still needs to read.
+  const [notice, setNotice] = useState<string | null>(null);
+
   // No navigation here on success: AuthGate re-renders when
   // onAuthStateChanged fires, which is the single source of truth.
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     setError(null);
+    setNotice(null);
     setBusy(true);
 
     try {
@@ -98,6 +105,7 @@ const LoginScreen: React.FC = () => {
   // rather than something to rewrite.
   const handleGoogle = async () => {
     setError(null);
+    setNotice(null);
     setBusy(true);
 
     try {
@@ -112,9 +120,57 @@ const LoginScreen: React.FC = () => {
     }
   };
 
+  /**
+   * Sends Firebase's own password reset email. Firebase hosts the reset
+   * page and handles the token, so there is no backend to write and
+   * nothing to build for the link's destination.
+   *
+   * The confirmation is deliberately the same whether or not the address
+   * has an account. Saying "no account found" would turn this form into
+   * a way to discover which emails are registered.
+   */
+  const handleReset = async () => {
+    const address = email.trim();
+
+    if (!address) {
+      setNotice(null);
+      setError('Enter your email address first, then tap Forgot password.');
+      return;
+    }
+
+    setError(null);
+    setNotice(null);
+    setBusy(true);
+
+    try {
+      await sendPasswordResetEmail(getFirebaseAuth(), address);
+      setNotice(
+        'If that email has an account, a reset link is on its way. Check your spam folder too.'
+      );
+    } catch (err) {
+      const code =
+        typeof err === 'object' && err !== null && 'code' in err
+          ? String((err as { code: unknown }).code)
+          : '';
+
+      // An unregistered address reports auth/user-not-found. Treated as
+      // success for the same reason as above.
+      if (code === 'auth/user-not-found') {
+        setNotice(
+          'If that email has an account, a reset link is on its way. Check your spam folder too.'
+        );
+      } else {
+        setError(describeAuthError(code));
+      }
+    }
+
+    setBusy(false);
+  };
+
   const toggleMode = () => {
     setMode(mode === 'sign_in' ? 'sign_up' : 'sign_in');
     setError(null);
+    setNotice(null);
   };
 
   const submitLabel = mode === 'sign_in' ? 'Sign in' : 'Create account';
@@ -164,6 +220,12 @@ const LoginScreen: React.FC = () => {
           </div>
         )}
 
+        {notice && (
+          <div style={styles.noticeBox} role="status">
+            <p style={styles.noticeText}>{notice}</p>
+          </div>
+        )}
+
         <form onSubmit={handleSubmit}>
           <div style={styles.field}>
             <label style={styles.label} htmlFor="auth-email">
@@ -198,6 +260,24 @@ const LoginScreen: React.FC = () => {
             />
             {mode === 'sign_up' && (
               <p style={styles.hint}>At least 6 characters.</p>
+            )}
+
+            {/*
+              Sign-in only. On the sign-up form there is no account to
+              reset yet, and offering it there invites people to reset a
+              password they are in the middle of choosing.
+            */}
+            {mode === 'sign_in' && (
+              <div style={styles.forgotRow}>
+                <button
+                  type="button"
+                  style={busy ? { ...styles.linkButton, ...styles.disabled } : styles.linkButton}
+                  onClick={handleReset}
+                  disabled={busy}
+                >
+                  Forgot password?
+                </button>
+              </div>
             )}
           </div>
 
@@ -319,6 +399,23 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: '14px',
     color: '#9b2c2c',
     margin: 0
+  },
+  noticeBox: {
+    backgroundColor: '#f2f8f4',
+    border: '1px solid #c2ddcb',
+    borderRadius: '8px',
+    padding: '12px 14px',
+    marginBottom: '18px'
+  },
+  noticeText: {
+    fontSize: '14px',
+    color: '#24603c',
+    margin: 0
+  },
+  forgotRow: {
+    display: 'flex',
+    justifyContent: 'flex-end',
+    marginTop: '8px'
   },
   field: {
     marginBottom: '18px'

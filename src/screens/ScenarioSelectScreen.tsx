@@ -1,13 +1,29 @@
-import React from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 
 import { useNavigationState } from '../store/navigationState';
 import { useS02SessionState } from '../store/s02SessionState';
 import { useActiveScenarioState } from '../store/activeScenarioState';
 import { useScenarioProgressState } from '../store/scenarioProgressState';
+import { useEntitlementState } from '../store/entitlementState';
+import Paywall from '../components/Paywall';
 import {
   SCENARIO_REGISTRY,
   ScenarioRegistryEntry
 } from '../data/scenarioRegistry';
+
+/**
+ * Scenario ids behind the premium entitlement.
+ *
+ * A constant rather than a field on ScenarioRegistryEntry: the registry's
+ * other fields all come from scenario JSON, and pricing is a commercial
+ * decision, not scenario content. Adding isPremium to the blueprint would
+ * put a store concern inside the behavioural spec.
+ */
+const PREMIUM_SCENARIO_IDS: string[] = ['MT-S02'];
+
+function isPremiumScenario(scenarioId: string): boolean {
+  return PREMIUM_SCENARIO_IDS.indexOf(scenarioId) !== -1;
+}
 
 /**
  * The scenario selector.
@@ -23,20 +39,78 @@ const ScenarioSelectScreen: React.FC = () => {
   const setActiveScenario = useActiveScenarioState((state) => state.setActiveScenario);
   const resetProgress = useScenarioProgressState((state) => state.resetProgress);
 
-  const open = (entry: ScenarioRegistryEntry) => {
-    // Order matters. The progress store is cleared first so the two hooks
-    // cannot save the outgoing scenario's step against the incoming
-    // scenario's document during the render in between.
-    resetProgress();
-    setActiveScenario(entry.scenarioId);
+  const hasPremium = useEntitlementState((state) => state.hasPremium);
+  const loadingEntitlements = useEntitlementState((state) => state.loadingEntitlements);
 
-    if (entry.flowKind === 'blueprint') {
-      resetS02();
-      setCurrentScreen('s02_sbi');
+  // Local, not a new Screen. Adding 'screen_paywall' to the Screen union
+  // would force edits to three exhaustive Record maps — App.stepInfo,
+  // SCREEN_TO_STEP and sessionPersistence.SCREENS — for a view that is
+  // never resumed into and never persisted.
+  const [paywallFor, setPaywallFor] = useState<ScenarioRegistryEntry | null>(null);
+
+  /**
+   * Navigation without the entitlement check.
+   *
+   * Split out so the purchase effect below can reuse it. Re-entering
+   * open() from there would re-run the gate against a hasPremium value
+   * React has not necessarily committed yet, and bounce the user back to
+   * the paywall they just paid to leave.
+   */
+  const openScenario = useCallback(
+    (entry: ScenarioRegistryEntry) => {
+      // Order matters. The progress store is cleared first so the two
+      // hooks cannot save the outgoing scenario's step against the
+      // incoming scenario's document during the render in between.
+      resetProgress();
+      setActiveScenario(entry.scenarioId);
+
+      if (entry.flowKind === 'blueprint') {
+        resetS02();
+        setCurrentScreen('s02_sbi');
+        return;
+      }
+      setCurrentScreen('scenario_overview');
+    },
+    [resetProgress, setActiveScenario, resetS02, setCurrentScreen]
+  );
+
+  const open = (entry: ScenarioRegistryEntry) => {
+    if (isPremiumScenario(entry.scenarioId) && !hasPremium) {
+      setPaywallFor(entry);
       return;
     }
-    setCurrentScreen('scenario_overview');
+    openScenario(entry);
   };
+
+  /**
+   * A completed purchase does not unmount the paywall on its own:
+   * paywallFor is local state here, hasPremium lives in the entitlement
+   * store, and nothing connected the two. Without this effect a paying
+   * customer sits on the paywall they have just paid to get past.
+   *
+   * Sending them straight into the scenario they wanted is deliberate —
+   * returning them to the selector to click the same card again reads as
+   * though the purchase failed.
+   *
+   * Also covers "Restore purchase" succeeding, which flips the same flag
+   * by the same route.
+   */
+  useEffect(() => {
+    if (hasPremium && paywallFor) {
+      const entry = paywallFor;
+      setPaywallFor(null);
+      openScenario(entry);
+    }
+  }, [hasPremium, paywallFor, openScenario]);
+
+  if (paywallFor) {
+    return (
+      <Paywall
+        scenarioTitle={paywallFor.title}
+        onDismiss={() => setPaywallFor(null)}
+      />
+    );
+  }
 
   return (
     <div style={styles.page}>
@@ -57,18 +131,24 @@ const ScenarioSelectScreen: React.FC = () => {
       </div>
 
       <div style={styles.grid}>
-        {SCENARIO_REGISTRY.map((entry) => (
-          <button
-            key={entry.scenarioId}
-            style={styles.scenarioCard}
-            onClick={() => open(entry)}
-          >
-            <span style={styles.cardEyebrow}>{entry.scenarioId}</span>
-            <span style={styles.cardTitle}>{entry.title}</span>
-            <span style={styles.cardBadge}>{entry.difficulty}</span>
-            <span style={styles.cardCompetency}>{entry.primaryCompetency}</span>
-          </button>
-        ))}
+        {SCENARIO_REGISTRY.map((entry) => {
+          const locked = isPremiumScenario(entry.scenarioId) && !hasPremium;
+
+          return (
+            <button
+              key={entry.scenarioId}
+              style={styles.scenarioCard}
+              onClick={() => open(entry)}
+              disabled={loadingEntitlements}
+            >
+              <span style={styles.cardEyebrow}>{entry.scenarioId}</span>
+              <span style={styles.cardTitle}>{entry.title}</span>
+              <span style={styles.cardBadge}>{entry.difficulty}</span>
+              <span style={styles.cardCompetency}>{entry.primaryCompetency}</span>
+              {locked && <span style={styles.cardLock}>Premium</span>}
+            </button>
+          );
+        })}
       </div>
     </div>
   );
@@ -176,5 +256,14 @@ const styles: Record<string, React.CSSProperties> = {
   cardCompetency: {
     fontSize: '15px',
     color: '#444'
+  },
+  cardLock: {
+    display: 'inline-block',
+    padding: '4px 12px',
+    borderRadius: '999px',
+    backgroundColor: '#fdf3e3',
+    color: '#8a5a00',
+    fontSize: '13px',
+    fontWeight: 600
   }
 };
