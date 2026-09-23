@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Retained as a solid fallback. The adaptive icon uses the gradient
+         drawable of the same name; this is the flat equivalent. -->
+    <color name="ic_launcher_background">#0B477A</color>
+</resources>
