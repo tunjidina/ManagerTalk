@@ -455,9 +455,9 @@ const styles: Record<string, React.CSSProperties> = {
     borderBottom: '1px solid #e6e6e6'
   },
   topBarInner: {
-    maxWidth: '900px',
+    maxWidth: 'var(--mt-page-max-width, 900px)',
     margin: '0 auto',
-    padding: '16px 40px',
+    padding: '16px var(--mt-page-padding, 40px)',
     display: 'flex',
     flexWrap: 'wrap',
     gap: '16px',

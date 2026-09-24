@@ -313,7 +313,7 @@ const styles: Record<string, React.CSSProperties> = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: '40px 20px',
+    padding: 'var(--mt-page-padding, 40px) 20px',
     fontFamily: 'Inter, sans-serif',
     lineHeight: 1.6,
     color: '#1a1a1a',

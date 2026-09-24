@@ -292,8 +292,8 @@ export default Paywall;
 
 const styles: Record<string, React.CSSProperties> = {
   page: {
-    padding: '40px',
-    maxWidth: '900px',
+    padding: 'var(--mt-page-padding, 40px)',
+    maxWidth: 'var(--mt-page-max-width, 900px)',
     margin: '0 auto',
     fontFamily: 'Inter, sans-serif',
     lineHeight: 1.6,

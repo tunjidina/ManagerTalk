@@ -27,8 +27,9 @@ const CommitmentForm: React.FC<Props> = ({
       <div style={styles.section}>
         <h3 style={styles.sectionTitle}>Manager Commitment</h3>
 
-        <label style={styles.label}>Action</label>
+        <label htmlFor="commitment-manager-action" style={styles.label}>Action</label>
         <input
+          id="commitment-manager-action"
           style={styles.input}
           value={managerCommitment?.action || ''}
           onChange={(e) =>
@@ -40,11 +41,12 @@ const CommitmentForm: React.FC<Props> = ({
           }
         />
 
-        <label style={styles.label}>Owner</label>
-        <input style={styles.input} value="manager" disabled />
+        <label htmlFor="commitment-manager-owner" style={styles.label}>Owner</label>
+        <input id="commitment-manager-owner" style={styles.input} value="manager" disabled />
 
-        <label style={styles.label}>Date</label>
+        <label htmlFor="commitment-manager-date" style={styles.label}>Date</label>
         <input
+          id="commitment-manager-date"
           type="date"
           style={styles.input}
           value={managerCommitment?.date || ''}
@@ -68,8 +70,9 @@ const CommitmentForm: React.FC<Props> = ({
       <div style={styles.section}>
         <h3 style={styles.sectionTitle}>Employee Commitment</h3>
 
-        <label style={styles.label}>Action</label>
+        <label htmlFor="commitment-employee-action" style={styles.label}>Action</label>
         <input
+          id="commitment-employee-action"
           style={styles.input}
           value={employeeCommitment?.action || ''}
           onChange={(e) =>
@@ -81,11 +84,12 @@ const CommitmentForm: React.FC<Props> = ({
           }
         />
 
-        <label style={styles.label}>Owner</label>
-        <input style={styles.input} value="employee" disabled />
+        <label htmlFor="commitment-employee-owner" style={styles.label}>Owner</label>
+        <input id="commitment-employee-owner" style={styles.input} value="employee" disabled />
 
-        <label style={styles.label}>Date</label>
+        <label htmlFor="commitment-employee-date" style={styles.label}>Date</label>
         <input
+          id="commitment-employee-date"
           type="date"
           style={styles.input}
           value={employeeCommitment?.date || ''}

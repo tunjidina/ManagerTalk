@@ -1,9 +1,18 @@
 import React, { useState } from 'react';
-import { doc, updateDoc } from 'firebase/firestore';
+import { doc, updateDoc, deleteDoc } from 'firebase/firestore';
+import {
+  EmailAuthProvider,
+  GoogleAuthProvider,
+  reauthenticateWithCredential,
+  reauthenticateWithPopup,
+  deleteUser
+} from 'firebase/auth';
 
 import { useNavigationState } from '../store/navigationState';
 import { useAuthState } from '../store/authState';
-import { getFirebaseDb } from '../lib/firebase';
+import { getFirebaseAuth, getFirebaseDb } from '../lib/firebase';
+import { SCENARIO_REGISTRY } from '../data/scenarioRegistry';
+import { clearSession } from '../utils/sessionPersistence';
 
 /**
  * Profile.
@@ -76,6 +85,110 @@ const ProfileScreen: React.FC = () => {
     setCurrentScreen('scenario_select');
   };
 
+  // -----------------------------
+  // Account deletion
+  //
+  // Required by Google Play for any app that lets users create an account.
+  // Order: re-authenticate, delete Firestore records while the token is
+  // still valid, clear local storage, then delete the Auth user last.
+  // deleteUser() fires onAuthStateChanged(null), and AuthGate takes the
+  // user to the sign-in screen, so nothing here navigates afterwards.
+  //
+  // scenarioAnalytics records are create-only by rule and are removed by
+  // the operator within 30 days, as the privacy policy states.
+  // -----------------------------
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [deletePassword, setDeletePassword] = useState('');
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+
+  const auth = getFirebaseAuth();
+  const usesPassword =
+    auth.currentUser !== null &&
+    auth.currentUser.providerData.some((p) => p.providerId === 'password');
+
+  const handleDeleteAccount = async () => {
+    if (deleting) {
+      return;
+    }
+
+    const firebaseUser = auth.currentUser;
+
+    if (!firebaseUser) {
+      setDeleteError('You are not signed in, so the account could not be deleted.');
+      return;
+    }
+
+    if (usesPassword && deletePassword.length === 0) {
+      setDeleteError('Enter your password to confirm.');
+      return;
+    }
+
+    setDeleting(true);
+    setDeleteError(null);
+
+    try {
+      if (usesPassword) {
+        const credential = EmailAuthProvider.credential(
+          firebaseUser.email || '',
+          deletePassword
+        );
+        await reauthenticateWithCredential(firebaseUser, credential);
+      } else {
+        await reauthenticateWithPopup(firebaseUser, new GoogleAuthProvider());
+      }
+    } catch (err) {
+      const code = (err as { code?: string }).code || '';
+      setDeleting(false);
+      setDeleteError(
+        code === 'auth/wrong-password' || code === 'auth/invalid-credential'
+          ? 'That password is incorrect.'
+          : 'We could not confirm it is you. Check your connection and try again.'
+      );
+      return;
+    }
+
+    const uid = firebaseUser.uid;
+    const db = getFirebaseDb();
+
+    try {
+      await Promise.all(
+        SCENARIO_REGISTRY.map((entry) =>
+          deleteDoc(doc(db, 'userScenarioState', uid + '_' + entry.scenarioId))
+        )
+      );
+      await deleteDoc(doc(db, 'users', uid));
+    } catch (err) {
+      setDeleting(false);
+      setDeleteError(
+        'Your data could not be deleted. Check your connection and try again.'
+      );
+      return;
+    }
+
+    clearSession();
+
+    try {
+      await deleteUser(firebaseUser);
+    } catch (err) {
+      setDeleting(false);
+      setDeleteError(
+        'Your data was deleted but the sign-in account was not. Try again, or email tunjidina12@gmail.com.'
+      );
+      return;
+    }
+
+    // The next person to sign in on this device starts at the selector,
+    // not on this screen.
+    setCurrentScreen('scenario_select');
+  };
+
+  const cancelDelete = () => {
+    setConfirmingDelete(false);
+    setDeletePassword('');
+    setDeleteError(null);
+  };
+
   return (
     <div style={styles.page}>
       {/* Header */}
@@ -138,6 +251,69 @@ const ProfileScreen: React.FC = () => {
           {saving ? 'Saving…' : 'Save'}
         </button>
       </div>
+
+      {/* Delete account */}
+      <section style={styles.dangerSection}>
+        <h2 style={styles.sectionLabel}>Delete Account</h2>
+
+        <div style={styles.dangerCard}>
+          <p style={styles.dangerText}>
+            Permanently deletes your sign-in account, certificate name and
+            scenario progress. This cannot be undone.
+          </p>
+
+          {deleteError && (
+            <div style={styles.errorBox} role="alert">
+              <p style={styles.errorText}>{deleteError}</p>
+            </div>
+          )}
+
+          {!confirmingDelete ? (
+            <button
+              style={styles.danger}
+              onClick={() => setConfirmingDelete(true)}
+            >
+              Delete account
+            </button>
+          ) : (
+            <>
+              {usesPassword && (
+                <div style={styles.field}>
+                  <label style={styles.fieldLabel} htmlFor="profile-delete-password">
+                    Enter your password to confirm
+                  </label>
+                  <input
+                    id="profile-delete-password"
+                    type="password"
+                    style={styles.input}
+                    value={deletePassword}
+                    onChange={(event) => setDeletePassword(event.target.value)}
+                    disabled={deleting}
+                    autoComplete="current-password"
+                  />
+                </div>
+              )}
+
+              <div style={styles.dangerActions}>
+                <button
+                  style={deleting ? { ...styles.secondary, ...styles.disabled } : styles.secondary}
+                  onClick={cancelDelete}
+                  disabled={deleting}
+                >
+                  Keep my account
+                </button>
+                <button
+                  style={deleting ? { ...styles.danger, ...styles.disabled } : styles.danger}
+                  onClick={handleDeleteAccount}
+                  disabled={deleting}
+                >
+                  {deleting ? 'Deleting…' : 'Permanently delete'}
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+      </section>
     </div>
   );
 };
@@ -150,8 +326,8 @@ export default ProfileScreen;
 
 const styles: Record<string, React.CSSProperties> = {
   page: {
-    padding: '40px',
-    maxWidth: '900px',
+    padding: 'var(--mt-page-padding, 40px)',
+    maxWidth: 'var(--mt-page-max-width, 900px)',
     margin: '0 auto',
     fontFamily: 'Inter, sans-serif',
     lineHeight: 1.6,
@@ -276,5 +452,37 @@ const styles: Record<string, React.CSSProperties> = {
   disabled: {
     opacity: 0.55,
     cursor: 'not-allowed'
+  },
+  dangerSection: {
+    marginTop: '48px'
+  },
+  dangerCard: {
+    padding: '24px',
+    backgroundColor: '#fff',
+    border: '1px solid #f3c2c2',
+    borderRadius: '12px'
+  },
+  dangerText: {
+    fontSize: '15px',
+    color: '#444',
+    margin: '0 0 20px 0'
+  },
+  dangerActions: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    gap: '12px',
+    alignItems: 'center',
+    marginTop: '20px'
+  },
+  danger: {
+    padding: '14px 24px',
+    fontSize: '16px',
+    fontWeight: 600,
+    fontFamily: 'Inter, sans-serif',
+    backgroundColor: '#fff',
+    color: '#b42318',
+    border: '1px solid #b42318',
+    borderRadius: '8px',
+    cursor: 'pointer'
   }
 };

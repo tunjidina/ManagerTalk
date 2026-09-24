@@ -221,10 +221,12 @@ const ConversationFlowScreen: React.FC = () => {
 
       {/* Composer */}
       <section style={styles.composerSection}>
-        <h2 style={styles.sectionLabel}>Your Message</h2>
+        <h2 id="manager-message-label" style={styles.sectionLabel}>Your Message</h2>
 
         <div style={styles.composer}>
           <textarea
+            id="manager-message"
+            aria-labelledby="manager-message-label"
             style={styles.textarea}
             value={managerMessage}
             onChange={(e) => setManagerMessage(e.target.value)}
@@ -262,8 +264,8 @@ export default ConversationFlowScreen;
 
 const styles: Record<string, React.CSSProperties> = {
   page: {
-    padding: '40px',
-    maxWidth: '900px',
+    padding: 'var(--mt-page-padding, 40px)',
+    maxWidth: 'var(--mt-page-max-width, 900px)',
     margin: '0 auto',
     fontFamily: 'Inter, sans-serif',
     lineHeight: 1.6,
@@ -415,7 +417,6 @@ const styles: Record<string, React.CSSProperties> = {
     minHeight: '128px',
     padding: '14px',
     border: 'none',
-    outline: 'none',
     resize: 'vertical',
     fontSize: '16px',
     lineHeight: 1.6,

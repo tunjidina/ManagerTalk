@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { Capacitor } from '@capacitor/core';
 
 import { useNavigationState } from '../store/navigationState';
 import { useS02SessionState } from '../store/s02SessionState';
@@ -18,8 +19,14 @@ import {
  * other fields all come from scenario JSON, and pricing is a commercial
  * decision, not scenario content. Adding isPremium to the blueprint would
  * put a store concern inside the behavioural spec.
+ *
+ * Empty on native. The paywall is the RevenueCat web SDK with Stripe
+ * checkout, which Google Play's Payments policy does not allow for
+ * digital content in a Play-distributed app. Until Play Billing is wired
+ * through @revenuecat/purchases-capacitor, the Android build ships with
+ * every scenario unlocked and never renders <Paywall>. Web is unchanged.
  */
-const PREMIUM_SCENARIO_IDS: string[] = ['MT-S02'];
+const PREMIUM_SCENARIO_IDS: string[] = Capacitor.isNativePlatform() ? [] : ['MT-S02'];
 
 function isPremiumScenario(scenarioId: string): boolean {
   return PREMIUM_SCENARIO_IDS.indexOf(scenarioId) !== -1;
@@ -162,8 +169,8 @@ export default ScenarioSelectScreen;
 
 const styles: Record<string, React.CSSProperties> = {
   page: {
-    padding: '40px',
-    maxWidth: '900px',
+    padding: 'var(--mt-page-padding, 40px)',
+    maxWidth: 'var(--mt-page-max-width, 900px)',
     margin: '0 auto',
     fontFamily: 'Inter, sans-serif',
     lineHeight: 1.6,
@@ -216,7 +223,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
   scenarioCard: {
     flex: '1 1 380px',
-    minWidth: '300px',
+    minWidth: 'var(--mt-card-min-width, 300px)',
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'flex-start',

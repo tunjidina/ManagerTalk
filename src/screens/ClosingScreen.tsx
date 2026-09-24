@@ -82,10 +82,12 @@ const ClosingScreen: React.FC = () => {
 
       {/* Composer */}
       <section style={styles.composerSection}>
-        <h2 style={styles.sectionLabel}>Your Closing Message</h2>
+        <h2 id="closing-message-label" style={styles.sectionLabel}>Your Closing Message</h2>
 
         <div style={styles.composer}>
           <textarea
+            id="closing-message"
+            aria-labelledby="closing-message-label"
             style={styles.textarea}
             placeholder="Write your closing message..."
             value={message}
@@ -115,8 +117,8 @@ export default ClosingScreen;
 
 const styles: Record<string, React.CSSProperties> = {
   page: {
-    padding: '40px',
-    maxWidth: '900px',
+    padding: 'var(--mt-page-padding, 40px)',
+    maxWidth: 'var(--mt-page-max-width, 900px)',
     margin: '0 auto',
     fontFamily: 'Inter, sans-serif',
     lineHeight: 1.6,
@@ -211,7 +213,6 @@ const styles: Record<string, React.CSSProperties> = {
     minHeight: '150px',
     padding: '14px',
     border: 'none',
-    outline: 'none',
     resize: 'vertical',
     fontSize: '16px',
     lineHeight: 1.6,
